@@ -31,6 +31,7 @@ contract Spoke is ISpoke {
 
   uint256[] public reservesList; // todo: rm, not needed
   uint256 public reserveCount;
+  uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = WadRayMath.WAD;
 
   constructor(address liquidityHubAddress, address oracleAddress) {
     liquidityHub = ILiquidityHub(liquidityHubAddress);
@@ -174,6 +175,8 @@ contract Spoke is ISpoke {
     userPosition.suppliedShares -= withdrawnShares;
     reserve.suppliedShares -= withdrawnShares;
 
+    _validateHealthFactor(msg.sender);
+
     emit Withdrawn(reserveId, msg.sender, amount);
   }
 
@@ -185,9 +188,8 @@ contract Spoke is ISpoke {
     DataTypes.UserData storage userData = _userData[msg.sender];
 
     _accrueInterest(reserve, userPosition, userData);
-    _validateBorrow(reserve, amount);
+    _validateBorrow(reserve, msg.sender);
 
-    // TODO HF check
     (uint256 newReserveRiskPremium, uint256 newUserRiskPremium) = _updateRiskPremiumAndBaseDebt({
       reserve: reserve,
       userPosition: userPosition,
@@ -197,6 +199,7 @@ contract Spoke is ISpoke {
       baseDebtTaken: 0
     });
     liquidityHub.draw(reserve.assetId, amount, uint32(newReserveRiskPremium.derayify()), to);
+    _validateHealthFactor(msg.sender);
     _notifyRiskPremiumUpdate(reserve.assetId, msg.sender, newUserRiskPremium);
 
     emit Borrowed(reserveId, to, amount);
@@ -323,7 +326,7 @@ contract Spoke is ISpoke {
   }
 
   function getUserRiskPremium(address user) external view returns (uint256) {
-    (uint256 userRiskPremium, , ) = _calculateUserAccountData(user);
+    (uint256 userRiskPremium, , , , ) = _calculateUserAccountData(user);
     return userRiskPremium.derayify();
   }
 
@@ -333,20 +336,41 @@ contract Spoke is ISpoke {
   }
 
   function getHealthFactor(address user) external view returns (uint256) {
-    (, , uint256 healthFactor) = _calculateUserAccountData(user);
+    (, , uint256 healthFactor, , ) = _calculateUserAccountData(user);
     return healthFactor;
   }
-
-  function getUserAccountData(address user) external view returns (uint256, uint256, uint256) {
-    return _calculateUserAccountData(user);
-  }
-
   function getReservePrice(uint256 reserveId) public view returns (uint256) {
     return oracle.getAssetPrice(_reserves[reserveId].assetId);
   }
 
   function getLiquidityPremium(uint256 reserveId) public view returns (uint256) {
     return _reserves[reserveId].config.liquidityPremium;
+  }
+
+  function getCollateralFactor(uint256 reserveId) public view returns (uint256) {
+    return _reserves[reserveId].config.collateralFactor;
+  }
+
+  function getUserAccountData(
+    address user
+  )
+    external
+    view
+    returns (
+      uint256 userRiskPremium,
+      uint256 avgCollateralFactor,
+      uint256 healthFactor,
+      uint256 totalCollateralInBaseCurrency,
+      uint256 totalDebtInBaseCurrency
+    )
+  {
+    (
+      userRiskPremium,
+      avgCollateralFactor,
+      healthFactor,
+      totalCollateralInBaseCurrency,
+      totalDebtInBaseCurrency
+    ) = _calculateUserAccountData(user);
   }
 
   // public
@@ -384,13 +408,13 @@ contract Spoke is ISpoke {
     require(amount <= suppliedAmount, InsufficientSupply(suppliedAmount));
   }
 
-  function _validateBorrow(DataTypes.Reserve storage reserve, uint256 amount) internal view {
+  function _validateBorrow(DataTypes.Reserve storage reserve, address userAddress) internal view {
     require(reserve.asset != address(0), ReserveNotListed());
     require(reserve.config.active, ReserveNotActive());
     require(!reserve.config.paused, ReservePaused());
     require(!reserve.config.frozen, ReserveFrozen());
     require(reserve.config.borrowable, ReserveNotBorrowable(reserve.reserveId));
-    // TODO: validation on HF to allow borrowing amount
+    // HF checked at the end of borrow action
   }
 
   // TODO: Place this and LH equivalent in a generic logic library
@@ -455,7 +479,7 @@ contract Spoke is ISpoke {
 
     // todo consider decoupling risk premium calc, pass in cached obj
     // @dev we need `userPosition.baseDebt` (userPosition.baseDebt) updated before calculating new user risk premium
-    (uint256 newUserRiskPremium, , ) = _calculateUserAccountData(userAddress);
+    (uint256 newUserRiskPremium, , , , ) = _calculateUserAccountData(userAddress);
 
     (uint256 newReserveRiskPremium, ) = MathUtils.addToWeightedAverage(
       reserveRiskPremiumWithoutCurrent,
@@ -496,9 +520,14 @@ contract Spoke is ISpoke {
     return _usingAsCollateral(userPosition) || _isBorrowing(userPosition);
   }
 
+  /// @return userRiskPremium
+  /// @return avgCollateralFactor
+  /// @return healthFactor
+  /// @return totalCollateralInBaseCurrency
+  /// @return totalDebtInBaseCurrency
   function _calculateUserAccountData(
     address userAddress
-  ) internal view returns (uint256, uint256, uint256) {
+  ) internal view returns (uint256, uint256, uint256, uint256, uint256) {
     DataTypes.CalculateUserAccountDataVars memory vars;
     uint256 reservesListLength = reservesList.length;
 
@@ -578,40 +607,49 @@ contract Spoke is ISpoke {
       }
     }
 
-    vars.avgCollateralFactor = vars.totalCollateralInBaseCurrency == 0
-      ? 0
-      : vars.avgCollateralFactor / vars.totalCollateralInBaseCurrency;
-
+    // at this point avgCollateralFactor is a weighted sum of collateral scaled by collateralFactor
+    // (avgCollateralFactor / totalCollateral) * totalCollateral can be simplified to avgCollateralFactor
+    // strip BPS factor from result, because running avgCollateralFactor sum has been scaled by collateralFactor (in BPS) above
     vars.healthFactor = vars.totalDebtInBaseCurrency == 0
       ? type(uint256).max
-      : (vars.totalCollateralInBaseCurrency.percentMul(vars.avgCollateralFactor)).wadDiv(
-        vars.totalDebtInBaseCurrency
-      ); // HF of 1 -> 1e18
+      : vars.avgCollateralFactor.wadDiv(vars.totalDebtInBaseCurrency).fromBps(); // HF of 1 -> 1e18
+
+    // divide by total collateral to get avg collateral factor in wad
+    vars.avgCollateralFactor = vars.totalCollateralInBaseCurrency == 0
+      ? 0
+      : vars.avgCollateralFactor.wadDiv(vars.totalCollateralInBaseCurrency).fromBps();
+
+    vars.debtCounterInBaseCurrency = vars.totalDebtInBaseCurrency;
 
     list.sortByKey(); // sort by liquidity premium
     vars.i = 0;
-    // @dev from this point onwards, `totalCollateralInBaseCurrency` represents running collateral
-    // value used in risk premium, `totalDebtInBaseCurrency` represents running outstanding debt
-    vars.totalCollateralInBaseCurrency = 0;
-    while (vars.i < vars.collateralReserveCount && vars.totalDebtInBaseCurrency > 0) {
-      if (vars.totalDebtInBaseCurrency == 0) break;
+    // @dev from this point onwards, `collateralCounterInBaseCurrency` represents running collateral
+    // value used in risk premium, `debtCounterInBaseCurrency` represents running outstanding debt
+    while (vars.i < vars.collateralReserveCount && vars.debtCounterInBaseCurrency > 0) {
+      if (vars.debtCounterInBaseCurrency == 0) break;
       (vars.liquidityPremium, vars.userCollateralInBaseCurrency) = list.get(vars.i);
-      if (vars.userCollateralInBaseCurrency > vars.totalDebtInBaseCurrency) {
-        vars.userCollateralInBaseCurrency = vars.totalDebtInBaseCurrency;
+      if (vars.userCollateralInBaseCurrency > vars.debtCounterInBaseCurrency) {
+        vars.userCollateralInBaseCurrency = vars.debtCounterInBaseCurrency;
       }
       vars.userRiskPremium += vars.userCollateralInBaseCurrency * vars.liquidityPremium;
-      vars.totalCollateralInBaseCurrency += vars.userCollateralInBaseCurrency;
-      vars.totalDebtInBaseCurrency -= vars.userCollateralInBaseCurrency;
+      vars.collateralCounterInBaseCurrency += vars.userCollateralInBaseCurrency;
+      vars.debtCounterInBaseCurrency -= vars.userCollateralInBaseCurrency;
       unchecked {
         ++vars.i;
       }
     }
 
-    if (vars.totalCollateralInBaseCurrency > 0) {
-      vars.userRiskPremium = (vars.userRiskPremium / vars.totalCollateralInBaseCurrency).rayify();
+    if (vars.collateralCounterInBaseCurrency > 0) {
+      vars.userRiskPremium = (vars.userRiskPremium / vars.collateralCounterInBaseCurrency).rayify();
     }
 
-    return (vars.userRiskPremium, vars.avgCollateralFactor, vars.healthFactor);
+    return (
+      vars.userRiskPremium,
+      vars.avgCollateralFactor,
+      vars.healthFactor,
+      vars.totalCollateralInBaseCurrency,
+      vars.totalDebtInBaseCurrency
+    );
   }
 
   function _getUserDebtInBaseCurrency(
@@ -725,6 +763,11 @@ contract Spoke is ISpoke {
     reserve.riskPremium = newReserveRiskPremium;
 
     return newReserveRiskPremium;
+  }
+
+  function _validateHealthFactor(address userAddress) internal view {
+    (, , uint256 healthFactor, , ) = _calculateUserAccountData(userAddress);
+    require(healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD, HealthFactorBelowThreshold());
   }
 
   function _validateReserveConfig(DataTypes.ReserveConfig calldata config) internal view {

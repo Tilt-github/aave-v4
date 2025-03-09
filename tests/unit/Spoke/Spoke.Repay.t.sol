@@ -13,20 +13,24 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiRepayAmount = daiSupplyAmount / 4;
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -42,15 +46,15 @@ contract SpokeRepayTest is SpokeBase {
 
     // Bob repays half of principal debt
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -77,20 +81,24 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiRepayAmount = daiSupplyAmount / 4;
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -107,7 +115,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGe(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -116,15 +124,15 @@ contract SpokeRepayTest is SpokeBase {
 
     // Bob repays half of principal debt
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -145,7 +153,7 @@ contract SpokeRepayTest is SpokeBase {
   }
 
   function test_repay_revertsWith_ReserveNotActive() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     uint256 amount = 100e18;
 
     updateReserveActiveFlag(spoke1, daiReserveId, false);
@@ -157,7 +165,7 @@ contract SpokeRepayTest is SpokeBase {
   }
 
   function test_repay_revertsWith_ReservePaused() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     uint256 amount = 100e18;
 
     updateReservePausedFlag(spoke1, daiReserveId, true);
@@ -184,20 +192,24 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -214,7 +226,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -228,15 +240,15 @@ contract SpokeRepayTest is SpokeBase {
     assertGt(daiRepayAmount, 0); // interest is not zero
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -265,20 +277,24 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -295,7 +311,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -307,15 +323,15 @@ contract SpokeRepayTest is SpokeBase {
     assertGt(daiRepayAmount, 0); // interest is not zero
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -342,16 +358,20 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
 
     // Bob supplies WETH as collateral
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supplies DAI
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrows DAI
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
 
     assertEq(bobDaiDataBefore.suppliedShares, 0);
@@ -364,7 +384,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes so that interest accrues
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     // Bob's debt (base debt + premium) is greater than the original borrow amount
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
@@ -376,13 +396,13 @@ contract SpokeRepayTest is SpokeBase {
     uint256 fullDebt = bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium;
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, fullDebt);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, fullDebt);
 
     // Bob repays using the max value to signal full repayment
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), type(uint256).max);
+    spoke1.repay(_daiReserveId(spoke1), type(uint256).max);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     uint256 bobDaiBalanceAfter = tokenList.dai.balanceOf(bob);
 
     // Verify that Bob's debt is fully cleared after repayment
@@ -401,13 +421,13 @@ contract SpokeRepayTest is SpokeBase {
 
     // Verify reserve debt is 0
     (uint256 baseDaiDebt, uint256 outstandingDaiPremium) = spoke1.getReserveDebt(
-      daiReserveId(spoke1)
+      _daiReserveId(spoke1)
     );
     assertEq(baseDaiDebt, 0);
     assertEq(outstandingDaiPremium, 0);
 
     // verify LH asset debt is 0
-    uint256 lhAssetDebt = hub.getAssetCumulativeDebt(daiReserveId(spoke1));
+    uint256 lhAssetDebt = hub.getAssetCumulativeDebt(_daiReserveId(spoke1));
     assertEq(lhAssetDebt, 0);
   }
 
@@ -417,16 +437,20 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
 
     // Bob supplies WETH as collateral
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supplies DAI
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrows DAI
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
 
     assertEq(bobDaiDataBefore.suppliedShares, 0);
@@ -439,7 +463,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes so that interest accrues
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     // Bob's debt (base debt + premium) is greater than the original borrow amount
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
@@ -452,13 +476,13 @@ contract SpokeRepayTest is SpokeBase {
     uint256 repayAmount = bound(repayAmount, fullDebt + 1, type(uint256).max);
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, fullDebt);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, fullDebt);
 
     // Bob repays using repay Amount > full debt
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), repayAmount);
+    spoke1.repay(_daiReserveId(spoke1), repayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     uint256 bobDaiBalanceAfter = tokenList.dai.balanceOf(bob);
 
     assertEq(
@@ -475,13 +499,13 @@ contract SpokeRepayTest is SpokeBase {
 
     // Verify reserve debt is 0
     (uint256 baseDaiDebt, uint256 outstandingDaiPremium) = spoke1.getReserveDebt(
-      daiReserveId(spoke1)
+      _daiReserveId(spoke1)
     );
     assertEq(baseDaiDebt, 0);
     assertEq(outstandingDaiPremium, 0);
 
     // verify LH asset debt is 0
-    uint256 lhAssetDebt = hub.getAssetCumulativeDebt(daiReserveId(spoke1));
+    uint256 lhAssetDebt = hub.getAssetCumulativeDebt(_daiReserveId(spoke1));
     assertEq(lhAssetDebt, 0);
   }
 
@@ -492,16 +516,20 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
 
     // Bob supplies WETH as collateral
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supplies DAI
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrows DAI
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
 
     assertEq(bobDaiDataBefore.suppliedShares, 0);
@@ -514,7 +542,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes so that interest accrues
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     // Bob's debt (base debt + premium) is greater than the original borrow amount
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
@@ -526,13 +554,13 @@ contract SpokeRepayTest is SpokeBase {
     uint256 fullDebt = bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium;
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, fullDebt);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, fullDebt);
 
     // Bob repays using a value gt full debt to signal full repayment
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), fullDebt + 1);
+    spoke1.repay(_daiReserveId(spoke1), fullDebt + 1);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     uint256 bobDaiBalanceAfter = tokenList.dai.balanceOf(bob);
 
     // Verify that Bob's debt is fully cleared after repayment
@@ -551,13 +579,13 @@ contract SpokeRepayTest is SpokeBase {
 
     // Verify reserve debt is 0
     (uint256 baseDaiDebt, uint256 outstandingDaiPremium) = spoke1.getReserveDebt(
-      daiReserveId(spoke1)
+      _daiReserveId(spoke1)
     );
     assertEq(baseDaiDebt, 0);
     assertEq(outstandingDaiPremium, 0);
 
     // verify LH asset debt is 0
-    uint256 lhAssetDebt = hub.getAssetCumulativeDebt(daiReserveId(spoke1));
+    uint256 lhAssetDebt = hub.getAssetCumulativeDebt(_daiReserveId(spoke1));
     assertEq(lhAssetDebt, 0);
   }
 
@@ -568,20 +596,24 @@ contract SpokeRepayTest is SpokeBase {
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -598,7 +630,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -607,9 +639,9 @@ contract SpokeRepayTest is SpokeBase {
 
     // Bob repays premium
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), bobDaiDataBefore.outstandingPremium);
+    spoke1.repay(_daiReserveId(spoke1), bobDaiDataBefore.outstandingPremium);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
 
     assertEq(bobDaiDataBefore.outstandingPremium, 0);
@@ -619,15 +651,15 @@ contract SpokeRepayTest is SpokeBase {
     assertGt(daiRepayAmount, 0); // interest is not zero
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -647,26 +679,30 @@ contract SpokeRepayTest is SpokeBase {
   /// repay all accrued base debt when outstanding premium is zero
   function test_repay_only_base_debt_no_premium() public {
     // update liquidity premium to zero
-    updateLiquidityPremium(spoke1, wethReserveId(spoke1), 0);
+    updateLiquidityPremium(spoke1, _wethReserveId(spoke1), 0);
 
     uint256 daiSupplyAmount = 100e18;
     uint256 wethSupplyAmount = 10e18;
     uint256 daiBorrowAmount = daiSupplyAmount / 2;
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiSupplyAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiSupplyAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -683,7 +719,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(10 days);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGt(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -696,15 +732,15 @@ contract SpokeRepayTest is SpokeBase {
     assertGt(daiRepayAmount, 0); // interest is not zero
 
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -721,13 +757,13 @@ contract SpokeRepayTest is SpokeBase {
     assertEq(tokenList.weth.balanceOf(bob), bobWethBalanceBefore);
   }
 
-  function test_repay_revertsWith_InvalidRestoreAmount() public {
-    DataTypes.UserPosition memory bobDaiData = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+  function test_repay_revertsWith_amount_exceeds_debt() public {
+    DataTypes.UserPosition memory bobDaiData = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertEq(bobDaiData.baseDebt + bobDaiData.outstandingPremium, 0, 'bob dai debt before');
 
     vm.expectRevert(ILiquidityHub.InvalidRestoreAmount.selector);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), 1);
+    spoke1.repay(_daiReserveId(spoke1), 1);
   }
 
   /// repay all or a portion of total debt in same block
@@ -741,26 +777,30 @@ contract SpokeRepayTest is SpokeBase {
     // calculate weth collateral
     uint256 wethSupplyAmount = _calcMinimumCollAmount(
       spoke1,
-      wethReserveId(spoke1),
-      daiReserveId(spoke1),
+      _wethReserveId(spoke1),
+      _daiReserveId(spoke1),
       daiBorrowAmount
     );
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiBorrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiBorrowAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -776,15 +816,15 @@ contract SpokeRepayTest is SpokeBase {
 
     // Bob repays
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -816,26 +856,30 @@ contract SpokeRepayTest is SpokeBase {
     // calculate weth collateral
     uint256 wethSupplyAmount = _calcMinimumCollAmount(
       spoke1,
-      wethReserveId(spoke1),
-      daiReserveId(spoke1),
+      _wethReserveId(spoke1),
+      _daiReserveId(spoke1),
       daiBorrowAmount
     );
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiBorrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiBorrowAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -852,7 +896,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(skipTime);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGe(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -861,15 +905,15 @@ contract SpokeRepayTest is SpokeBase {
 
     // Bob repays
     vm.expectEmit(address(spoke1));
-    emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+    emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
     vm.prank(bob);
-    spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+    spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
-    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
 
     assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -900,26 +944,30 @@ contract SpokeRepayTest is SpokeBase {
     // calculate weth collateral
     uint256 wethSupplyAmount = _calcMinimumCollAmount(
       spoke1,
-      wethReserveId(spoke1),
-      daiReserveId(spoke1),
+      _wethReserveId(spoke1),
+      _daiReserveId(spoke1),
       daiBorrowAmount
     );
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiBorrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiBorrowAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
 
@@ -935,7 +983,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(skipTime);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGe(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -951,26 +999,26 @@ contract SpokeRepayTest is SpokeBase {
       daiRepayAmount = 0;
       vm.expectRevert(ILiquidityHub.InvalidRestoreAmount.selector);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
     } else {
       // interest is at least 1
       daiRepayAmount = bound(daiRepayAmount, 1, bobDaiInterest);
       deal(address(tokenList.dai), bob, daiRepayAmount);
 
       vm.expectEmit(address(spoke1));
-      emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+      emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
       DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(
         spoke1,
         bob,
-        daiReserveId(spoke1)
+        _daiReserveId(spoke1)
       );
       DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
         spoke1,
         bob,
-        wethReserveId(spoke1)
+        _wethReserveId(spoke1)
       );
 
       assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -1002,26 +1050,30 @@ contract SpokeRepayTest is SpokeBase {
     // calculate weth collateral
     uint256 wethSupplyAmount = _calcMinimumCollAmount(
       spoke1,
-      wethReserveId(spoke1),
-      daiReserveId(spoke1),
+      _wethReserveId(spoke1),
+      _daiReserveId(spoke1),
       daiBorrowAmount
     );
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiBorrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiBorrowAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
 
@@ -1037,7 +1089,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(skipTime);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGe(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -1051,26 +1103,26 @@ contract SpokeRepayTest is SpokeBase {
       daiRepayAmount = 0;
       vm.expectRevert(ILiquidityHub.InvalidRestoreAmount.selector);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
     } else {
       // interest is at least 1
       daiRepayAmount = bound(daiRepayAmount, 1, bobDaiPremium);
       deal(address(tokenList.dai), bob, daiRepayAmount);
 
       vm.expectEmit(address(spoke1));
-      emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+      emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
       DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(
         spoke1,
         bob,
-        daiReserveId(spoke1)
+        _daiReserveId(spoke1)
       );
       DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
         spoke1,
         bob,
-        wethReserveId(spoke1)
+        _wethReserveId(spoke1)
       );
 
       assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -1111,26 +1163,30 @@ contract SpokeRepayTest is SpokeBase {
     // calculate weth collateral
     uint256 wethSupplyAmount = _calcMinimumCollAmount(
       spoke1,
-      wethReserveId(spoke1),
-      daiReserveId(spoke1),
+      _wethReserveId(spoke1),
+      _daiReserveId(spoke1),
       daiBorrowAmount
     );
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiBorrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiBorrowAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
@@ -1147,7 +1203,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(skipTime);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGe(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -1158,10 +1214,10 @@ contract SpokeRepayTest is SpokeBase {
     if (bobDaiDataBefore.outstandingPremium > 0) {
       deal(address(tokenList.dai), bob, bobDaiDataBefore.outstandingPremium);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), bobDaiDataBefore.outstandingPremium);
+      spoke1.repay(_daiReserveId(spoke1), bobDaiDataBefore.outstandingPremium);
     }
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     bobDaiBalanceBefore = tokenList.dai.balanceOf(bob);
 
     assertEq(bobDaiDataBefore.outstandingPremium, 0);
@@ -1173,26 +1229,26 @@ contract SpokeRepayTest is SpokeBase {
       daiRepayAmount = 0;
       vm.expectRevert(ILiquidityHub.InvalidRestoreAmount.selector);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
     } else {
       // interest is at least 1
       daiRepayAmount = bound(daiRepayAmount, 1, bobDaiBaseDebt);
       deal(address(tokenList.dai), bob, daiRepayAmount);
 
       vm.expectEmit(address(spoke1));
-      emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+      emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
       DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(
         spoke1,
         bob,
-        daiReserveId(spoke1)
+        _daiReserveId(spoke1)
       );
       DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
         spoke1,
         bob,
-        wethReserveId(spoke1)
+        _wethReserveId(spoke1)
       );
 
       assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -1227,31 +1283,35 @@ contract SpokeRepayTest is SpokeBase {
     daiBorrowAmount = bound(daiBorrowAmount, 1, MAX_SUPPLY_AMOUNT / 2);
 
     // update liquidity premium to zero
-    updateLiquidityPremium(spoke1, wethReserveId(spoke1), 0);
+    updateLiquidityPremium(spoke1, _wethReserveId(spoke1), 0);
 
     // calculate weth collateral
     uint256 wethSupplyAmount = _calcMinimumCollAmount(
       spoke1,
-      wethReserveId(spoke1),
-      daiReserveId(spoke1),
+      _wethReserveId(spoke1),
+      _daiReserveId(spoke1),
       daiBorrowAmount
     );
 
     // Bob supply weth
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-    setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
 
     // Alice supply dai
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiBorrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiBorrowAmount, alice);
 
     // Bob borrow dai
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiBorrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiBorrowAmount, bob);
 
-    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    DataTypes.UserPosition memory bobDaiDataBefore = getUserInfo(
+      spoke1,
+      bob,
+      _daiReserveId(spoke1)
+    );
     DataTypes.UserPosition memory bobWethDataBefore = getUserInfo(
       spoke1,
       bob,
-      wethReserveId(spoke1)
+      _wethReserveId(spoke1)
     );
     uint256 bobWethBalanceBefore = tokenList.weth.balanceOf(bob);
 
@@ -1267,7 +1327,7 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(skipTime);
 
-    bobDaiDataBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
+    bobDaiDataBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
     assertGe(
       bobDaiDataBefore.baseDebt + bobDaiDataBefore.outstandingPremium,
       daiBorrowAmount,
@@ -1282,26 +1342,26 @@ contract SpokeRepayTest is SpokeBase {
       daiRepayAmount = 0;
       vm.expectRevert(ILiquidityHub.InvalidRestoreAmount.selector);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
     } else {
       // interest is at least 1
       daiRepayAmount = bound(daiRepayAmount, 1, bobDaiBaseDebt);
       deal(address(tokenList.dai), bob, daiRepayAmount);
 
       vm.expectEmit(address(spoke1));
-      emit ISpoke.Repaid(daiReserveId(spoke1), bob, daiRepayAmount);
+      emit ISpoke.Repaid(_daiReserveId(spoke1), bob, daiRepayAmount);
       vm.prank(bob);
-      spoke1.repay(daiReserveId(spoke1), daiRepayAmount);
+      spoke1.repay(_daiReserveId(spoke1), daiRepayAmount);
 
       DataTypes.UserPosition memory bobDaiDataAfter = getUserInfo(
         spoke1,
         bob,
-        daiReserveId(spoke1)
+        _daiReserveId(spoke1)
       );
       DataTypes.UserPosition memory bobWethDataAfter = getUserInfo(
         spoke1,
         bob,
-        wethReserveId(spoke1)
+        _wethReserveId(spoke1)
       );
 
       assertEq(bobDaiDataAfter.suppliedShares, bobDaiDataBefore.suppliedShares);
@@ -1341,7 +1401,7 @@ contract SpokeRepayTest is SpokeBase {
     uint256 usdxBorrowAmount,
     uint256 wbtcBorrowAmount,
     uint256 repayPortion,
-    uint40 skipTime
+    uint256 skipTime
   ) public {
     RepayMultipleLocal memory daiInfo;
     RepayMultipleLocal memory wethInfo;
@@ -1353,6 +1413,7 @@ contract SpokeRepayTest is SpokeBase {
     usdxInfo.borrowAmount = bound(usdxBorrowAmount, 1, MAX_SUPPLY_AMOUNT / 2);
     wbtcInfo.borrowAmount = bound(wbtcBorrowAmount, 1, MAX_SUPPLY_AMOUNT / 2);
     repayPortion = bound(repayPortion, 0, PercentageMath.PERCENTAGE_FACTOR);
+    skipTime = bound(skipTime, 1, MAX_SKIP_TIME);
 
     daiInfo.repayAmount = daiInfo.borrowAmount.percentMul(repayPortion);
     wethInfo.repayAmount = wethInfo.borrowAmount.percentMul(repayPortion);
@@ -1362,57 +1423,58 @@ contract SpokeRepayTest is SpokeBase {
     // weth collateral for dai and usdx
     // wbtc collateral for weth and wbtc
     // calculate weth collateral
+    // calculate wbtc collateral
     {
       uint256 wethSupplyAmount = _calcMinimumCollAmount(
         spoke1,
-        wethReserveId(spoke1),
-        daiReserveId(spoke1),
+        _wethReserveId(spoke1),
+        _daiReserveId(spoke1),
         daiInfo.borrowAmount
       ) +
         _calcMinimumCollAmount(
           spoke1,
-          wethReserveId(spoke1),
-          usdxReserveId(spoke1),
+          _wethReserveId(spoke1),
+          _usdxReserveId(spoke1),
           usdxInfo.borrowAmount
         );
       uint256 wbtcSupplyAmount = _calcMinimumCollAmount(
         spoke1,
-        wbtcReserveId(spoke1),
-        wethReserveId(spoke1),
+        _wbtcReserveId(spoke1),
+        _wethReserveId(spoke1),
         wethInfo.borrowAmount
       ) +
         _calcMinimumCollAmount(
           spoke1,
-          wbtcReserveId(spoke1),
-          wbtcReserveId(spoke1),
+          _wbtcReserveId(spoke1),
+          _wbtcReserveId(spoke1),
           wbtcInfo.borrowAmount
         );
 
       // Bob supply weth and wbtc
       deal(address(tokenList.weth), bob, wethSupplyAmount);
-      Utils.spokeSupply(spoke1, wethReserveId(spoke1), bob, wethSupplyAmount, bob);
-      setUsingAsCollateral(spoke1, bob, wethReserveId(spoke1), true);
+      Utils.spokeSupply(spoke1, _wethReserveId(spoke1), bob, wethSupplyAmount, bob);
+      setUsingAsCollateral(spoke1, bob, _wethReserveId(spoke1), true);
       deal(address(tokenList.wbtc), bob, wbtcSupplyAmount);
-      Utils.spokeSupply(spoke1, wbtcReserveId(spoke1), bob, wbtcSupplyAmount, bob);
-      setUsingAsCollateral(spoke1, bob, wbtcReserveId(spoke1), true);
+      Utils.spokeSupply(spoke1, _wbtcReserveId(spoke1), bob, wbtcSupplyAmount, bob);
+      setUsingAsCollateral(spoke1, bob, _wbtcReserveId(spoke1), true);
     }
 
     // Alice supply liquidity
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), alice, daiInfo.borrowAmount, alice);
-    Utils.spokeSupply(spoke1, wethReserveId(spoke1), alice, wethInfo.borrowAmount, alice);
-    Utils.spokeSupply(spoke1, usdxReserveId(spoke1), alice, usdxInfo.borrowAmount, alice);
-    Utils.spokeSupply(spoke1, wbtcReserveId(spoke1), alice, wbtcInfo.borrowAmount, alice);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), alice, daiInfo.borrowAmount, alice);
+    Utils.spokeSupply(spoke1, _wethReserveId(spoke1), alice, wethInfo.borrowAmount, alice);
+    Utils.spokeSupply(spoke1, _usdxReserveId(spoke1), alice, usdxInfo.borrowAmount, alice);
+    Utils.spokeSupply(spoke1, _wbtcReserveId(spoke1), alice, wbtcInfo.borrowAmount, alice);
 
     // Bob borrows
-    Utils.spokeBorrow(spoke1, daiReserveId(spoke1), bob, daiInfo.borrowAmount, bob);
-    Utils.spokeBorrow(spoke1, wethReserveId(spoke1), bob, wethInfo.borrowAmount, bob);
-    Utils.spokeBorrow(spoke1, usdxReserveId(spoke1), bob, usdxInfo.borrowAmount, bob);
-    Utils.spokeBorrow(spoke1, wbtcReserveId(spoke1), bob, wbtcInfo.borrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _daiReserveId(spoke1), bob, daiInfo.borrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _wethReserveId(spoke1), bob, wethInfo.borrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _usdxReserveId(spoke1), bob, usdxInfo.borrowAmount, bob);
+    Utils.spokeBorrow(spoke1, _wbtcReserveId(spoke1), bob, wbtcInfo.borrowAmount, bob);
 
-    daiInfo.posBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
-    wethInfo.posBefore = getUserInfo(spoke1, bob, wethReserveId(spoke1));
-    usdxInfo.posBefore = getUserInfo(spoke1, bob, usdxReserveId(spoke1));
-    wbtcInfo.posBefore = getUserInfo(spoke1, bob, wbtcReserveId(spoke1));
+    daiInfo.posBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
+    wethInfo.posBefore = getUserInfo(spoke1, bob, _wethReserveId(spoke1));
+    usdxInfo.posBefore = getUserInfo(spoke1, bob, _usdxReserveId(spoke1));
+    wbtcInfo.posBefore = getUserInfo(spoke1, bob, _wbtcReserveId(spoke1));
 
     assertEq(
       daiInfo.posBefore.baseDebt + daiInfo.posBefore.outstandingPremium,
@@ -1434,10 +1496,10 @@ contract SpokeRepayTest is SpokeBase {
     // Time passes
     skip(skipTime);
 
-    daiInfo.posBefore = getUserInfo(spoke1, bob, daiReserveId(spoke1));
-    wethInfo.posBefore = getUserInfo(spoke1, bob, wethReserveId(spoke1));
-    usdxInfo.posBefore = getUserInfo(spoke1, bob, usdxReserveId(spoke1));
-    wbtcInfo.posBefore = getUserInfo(spoke1, bob, wbtcReserveId(spoke1));
+    daiInfo.posBefore = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
+    wethInfo.posBefore = getUserInfo(spoke1, bob, _wethReserveId(spoke1));
+    usdxInfo.posBefore = getUserInfo(spoke1, bob, _usdxReserveId(spoke1));
+    wbtcInfo.posBefore = getUserInfo(spoke1, bob, _wbtcReserveId(spoke1));
 
     assertGe(
       daiInfo.posBefore.baseDebt + daiInfo.posBefore.outstandingPremium,
@@ -1459,25 +1521,25 @@ contract SpokeRepayTest is SpokeBase {
     // Repayments
     if (daiInfo.repayAmount > 0) {
       deal(address(tokenList.dai), bob, daiInfo.repayAmount);
-      Utils.spokeRepay(spoke1, daiReserveId(spoke1), bob, daiInfo.repayAmount);
+      Utils.spokeRepay(spoke1, _daiReserveId(spoke1), bob, daiInfo.repayAmount);
     }
     if (wethInfo.repayAmount > 0) {
       deal(address(tokenList.weth), bob, wethInfo.repayAmount);
-      Utils.spokeRepay(spoke1, wethReserveId(spoke1), bob, wethInfo.repayAmount);
+      Utils.spokeRepay(spoke1, _wethReserveId(spoke1), bob, wethInfo.repayAmount);
     }
     if (wbtcInfo.repayAmount > 0) {
       deal(address(tokenList.wbtc), bob, wbtcInfo.repayAmount);
-      Utils.spokeRepay(spoke1, wbtcReserveId(spoke1), bob, wbtcInfo.repayAmount);
+      Utils.spokeRepay(spoke1, _wbtcReserveId(spoke1), bob, wbtcInfo.repayAmount);
     }
     if (usdxInfo.repayAmount > 0) {
       deal(address(tokenList.usdx), bob, usdxInfo.repayAmount);
-      Utils.spokeRepay(spoke1, usdxReserveId(spoke1), bob, usdxInfo.repayAmount);
+      Utils.spokeRepay(spoke1, _usdxReserveId(spoke1), bob, usdxInfo.repayAmount);
     }
 
-    daiInfo.posAfter = getUserInfo(spoke1, bob, daiReserveId(spoke1));
-    wethInfo.posAfter = getUserInfo(spoke1, bob, wethReserveId(spoke1));
-    usdxInfo.posAfter = getUserInfo(spoke1, bob, usdxReserveId(spoke1));
-    wbtcInfo.posAfter = getUserInfo(spoke1, bob, wbtcReserveId(spoke1));
+    daiInfo.posAfter = getUserInfo(spoke1, bob, _daiReserveId(spoke1));
+    wethInfo.posAfter = getUserInfo(spoke1, bob, _wethReserveId(spoke1));
+    usdxInfo.posAfter = getUserInfo(spoke1, bob, _usdxReserveId(spoke1));
+    wbtcInfo.posAfter = getUserInfo(spoke1, bob, _wbtcReserveId(spoke1));
 
     // collateral remains the same
     assertEq(daiInfo.posAfter.suppliedShares, daiInfo.posBefore.suppliedShares);

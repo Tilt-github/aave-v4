@@ -534,7 +534,10 @@ contract LiquidityHub is ILiquidityHub {
     return uint256(a);
   }
 
-  function _validateAssetConfig(DataTypes.AssetConfig calldata config, address asset) internal {
+  function _validateAssetConfig(
+    DataTypes.AssetConfig calldata config,
+    address asset
+  ) internal pure {
     require(asset != address(0), InvalidAssetAddress());
     require(config.irStrategy != address(0), InvalidIrStrategy());
     require(config.decimals <= MAX_ALLOWED_ASSET_DECIMALS, InvalidAssetDecimals());

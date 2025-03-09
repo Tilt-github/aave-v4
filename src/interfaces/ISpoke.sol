@@ -34,6 +34,7 @@ interface ISpoke {
   error InvalidCollateralFactor();
   error InvalidLiquidationBonus();
   error InvalidReserveDecimals();
+  error HealthFactorBelowThreshold();
 
   function addReserve(
     uint256 assetId,
@@ -87,11 +88,14 @@ interface ISpoke {
   function getReserveCumulativeDebt(uint256 reserveId) external view returns (uint256);
   function getReserveRiskPremium(uint256 reserveId) external view returns (uint256);
   function getUserRiskPremium(address user) external view returns (uint256);
+  function getUserAccountData(
+    address user
+  ) external view returns (uint256, uint256, uint256, uint256, uint256);
   function getLastUsedUserRiskPremium(address user) external view returns (uint256);
   function getHealthFactor(address user) external view returns (uint256);
-  function getUserAccountData(address user) external view returns (uint256, uint256, uint256);
   function getReservePrice(uint256 reserveId) external view returns (uint256);
   function getLiquidityPremium(uint256 reserveId) external view returns (uint256);
+  function getCollateralFactor(uint256 reserveId) external view returns (uint256);
   function getReserve(uint256 reserveId) external view returns (DataTypes.Reserve memory);
   function getUserPosition(
     uint256 reserveId,
@@ -101,4 +105,5 @@ interface ISpoke {
   function oracle() external view returns (IPriceOracle);
   function reservesList(uint256) external view returns (uint256);
   function reserveCount() external view returns (uint256);
+  function HEALTH_FACTOR_LIQUIDATION_THRESHOLD() external view returns (uint256);
 }

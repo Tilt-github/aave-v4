@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {PercentageMath} from 'src/contracts/PercentageMath.sol';
+
 /**
  * @title WadRayMath library
  * @author Aave
@@ -181,10 +183,10 @@ library WadRayMath {
   }
 
   function bpsToRay(uint256 a) internal pure returns (uint256) {
-    return (a * RAY) / 100_00;
+    return (a * RAY) / PercentageMath.PERCENTAGE_FACTOR;
   }
 
   function rayToBps(uint256 a) internal pure returns (uint256) {
-    return (a * 100_00) / RAY;
+    return (a * PercentageMath.PERCENTAGE_FACTOR) / RAY;
   }
 }

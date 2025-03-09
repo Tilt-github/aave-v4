@@ -8,7 +8,7 @@ contract SpokeConfigTest is SpokeBase {
   using WadRayMath for uint256;
 
   function test_updateReserveConfig() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     DataTypes.Reserve memory reserveData = spoke1.getReserve(daiReserveId);
 
     DataTypes.ReserveConfig memory newReserveConfig = DataTypes.ReserveConfig({
@@ -49,7 +49,7 @@ contract SpokeConfigTest is SpokeBase {
   }
 
   function test_updateReserveConfig_cannot_update_decimals() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     DataTypes.ReserveConfig memory config = spoke1.getReserve(daiReserveId).config;
 
     uint256 oldDecimals = config.decimals;
@@ -70,7 +70,7 @@ contract SpokeConfigTest is SpokeBase {
   function test_setUsingAsCollateral_revertsWith_ReserveCannotBeUsedAsCollateral() public {
     bool newCollateralFlag = false;
     bool usingAsCollateral = true;
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     updateCollateralFlag(spoke1, daiReserveId, newCollateralFlag);
 
     vm.expectRevert(
@@ -81,7 +81,7 @@ contract SpokeConfigTest is SpokeBase {
   }
 
   function test_setUsingAsCollateral_revertsWith_ReserveNotActive() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     updateReserveActiveFlag(spoke1, daiReserveId, false);
     assertFalse(spoke1.getReserve(daiReserveId).config.active);
 
@@ -91,7 +91,7 @@ contract SpokeConfigTest is SpokeBase {
   }
 
   function test_setUsingAsCollateral_revertsWith_ReservePaused() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     updateReservePausedFlag(spoke1, daiReserveId, true);
     assertTrue(spoke1.getReserve(daiReserveId).config.paused);
 
@@ -105,7 +105,7 @@ contract SpokeConfigTest is SpokeBase {
     bool usingAsCollateral = true;
     uint256 daiAmount = 100e18;
 
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
 
     // ensure DAI is allowed as collateral
     updateCollateralFlag(spoke1, daiReserveId, newCollateralFlag);
@@ -124,7 +124,7 @@ contract SpokeConfigTest is SpokeBase {
   }
 
   function test_updateReserveConfig_revertsWith_InvalidLiquidityPremium() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     DataTypes.ReserveConfig memory config = spoke1.getReserve(daiReserveId).config;
 
     config.liquidityPremium = PercentageMath.PERCENTAGE_FACTOR * 10 + 1;
@@ -144,7 +144,7 @@ contract SpokeConfigTest is SpokeBase {
   }
 
   function test_updateReserveConfig_revertsWith_InvalidCollateralFactor() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     DataTypes.ReserveConfig memory config = spoke1.getReserve(daiReserveId).config;
     config.collateralFactor = PercentageMath.PERCENTAGE_FACTOR + 1;
 
@@ -154,7 +154,7 @@ contract SpokeConfigTest is SpokeBase {
   }
 
   function test_updateReserveConfig_revertsWith_InvalidLiquidationBonus() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     DataTypes.ReserveConfig memory config = spoke1.getReserve(daiReserveId).config;
     config.liquidationBonus = PercentageMath.PERCENTAGE_FACTOR + 1;
 
@@ -236,6 +236,6 @@ contract SpokeConfigTest is SpokeBase {
 
     vm.expectRevert(ISpoke.InvalidReserveDecimals.selector);
     vm.prank(SPOKE_ADMIN);
-    spoke1.addReserve(wethAssetId, newReserveConfig);
+    spoke1.addReserve(reserveId, newReserveConfig);
   }
 }

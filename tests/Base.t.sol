@@ -28,8 +28,16 @@ import {WETH9} from 'src/dependencies/weth/WETH9.sol';
 abstract contract Base is Test {
   using WadRayMath for uint256;
   using SharesMath for uint256;
+  using PercentageMath for uint256;
 
   uint256 internal constant MAX_SUPPLY_AMOUNT = 1e30;
+  uint256 internal constant MAX_TOKEN_DECIMALS_SUPPORTED = 18;
+  uint256 internal constant MAX_SUPPLY_ASSET_UNITS =
+    MAX_SUPPLY_AMOUNT / 10 ** MAX_TOKEN_DECIMALS_SUPPORTED;
+  uint256 internal MAX_SUPPLY_AMOUNT_USDX;
+  uint256 internal MAX_SUPPLY_AMOUNT_DAI;
+  uint256 internal MAX_SUPPLY_AMOUNT_WBTC;
+  uint256 internal MAX_SUPPLY_AMOUNT_WETH;
   uint32 internal constant MAX_RISK_PREMIUM_BPS = 1000_00;
   uint256 internal constant MAX_BORROW_RATE = 1000_00; // matches DefaultReserveInterestRateStrategy
   uint256 internal constant MAX_SKIP_TIME = 10_000 days;
@@ -143,6 +151,11 @@ abstract contract Base is Test {
     vm.label(address(tokenList.usdx), 'USDX');
     vm.label(address(tokenList.dai), 'DAI');
     vm.label(address(tokenList.wbtc), 'WBTC');
+
+    MAX_SUPPLY_AMOUNT_USDX = MAX_SUPPLY_ASSET_UNITS * 10 ** tokenList.usdx.decimals();
+    MAX_SUPPLY_AMOUNT_WETH = MAX_SUPPLY_ASSET_UNITS * 10 ** tokenList.weth.decimals();
+    MAX_SUPPLY_AMOUNT_DAI = MAX_SUPPLY_ASSET_UNITS * 10 ** tokenList.dai.decimals();
+    MAX_SUPPLY_AMOUNT_WBTC = MAX_SUPPLY_ASSET_UNITS * 10 ** tokenList.wbtc.decimals();
 
     address[3] memory users = [alice, bob, carol];
 
@@ -602,27 +615,27 @@ abstract contract Base is Test {
   }
 
   // assumes spoke has usdx supported
-  function usdxReserveId(ISpoke spoke) internal view returns (uint256) {
+  function _usdxReserveId(ISpoke spoke) internal view returns (uint256) {
     return spokeInfo[spoke].usdx.reserveId;
   }
 
   // assumes spoke has dai supported
-  function daiReserveId(ISpoke spoke) internal view returns (uint256) {
+  function _daiReserveId(ISpoke spoke) internal view returns (uint256) {
     return spokeInfo[spoke].dai.reserveId;
   }
 
   // assumes spoke has weth supported
-  function wethReserveId(ISpoke spoke) internal view returns (uint256) {
+  function _wethReserveId(ISpoke spoke) internal view returns (uint256) {
     return spokeInfo[spoke].weth.reserveId;
   }
 
   // assumes spoke has wbtc supported
-  function wbtcReserveId(ISpoke spoke) internal view returns (uint256) {
+  function _wbtcReserveId(ISpoke spoke) internal view returns (uint256) {
     return spokeInfo[spoke].wbtc.reserveId;
   }
 
   // assumes spoke has dai2 supported
-  function dai2ReserveId(ISpoke spoke) internal view returns (uint256) {
+  function _dai2ReserveId(ISpoke spoke) internal view returns (uint256) {
     return spokeInfo[spoke].dai2.reserveId;
   }
 
@@ -698,5 +711,11 @@ abstract contract Base is Test {
     address user
   ) internal view returns (uint256) {
     return spoke.getUserSuppliedAmount(reserveId, user);
+  }
+
+  /// @dev Helper function to calculate a new price based on a percentage change
+  function calcNewPrice(uint256 price, uint256 percent) public pure returns (uint256) {
+    if (percent == 0) return price;
+    return price.percentMul(percent);
   }
 }

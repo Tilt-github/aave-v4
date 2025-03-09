@@ -12,7 +12,7 @@ contract SpokeAccrueInterestTest is SpokeBase {
 
   /// No interest should accrue when no action is taken.
   function test_accrueInterest_NoActionTaken() public {
-    DataTypes.Reserve memory wethInfo = getReserveInfo(spoke1, wethReserveId(spoke1));
+    DataTypes.Reserve memory wethInfo = getReserveInfo(spoke1, _wethReserveId(spoke1));
     assertEq(wethInfo.lastUpdateTimestamp, 0);
     assertEq(wethInfo.baseDebt, 0);
     assertEq(wethInfo.outstandingPremium, 0);
@@ -22,7 +22,7 @@ contract SpokeAccrueInterestTest is SpokeBase {
   /// Supply an asset only, and check no interest accrued.
   function test_accrueInterest_OnlySupply(uint40 elapsed) public {
     uint256 amount = 1000e18;
-    uint256 wethReserveId = wethReserveId(spoke1);
+    uint256 wethReserveId = _wethReserveId(spoke1);
 
     // Bob supplies through spoke 1
     Utils.spokeSupply(spoke1, wethReserveId, bob, amount, bob);
@@ -43,11 +43,15 @@ contract SpokeAccrueInterestTest is SpokeBase {
   /// Supply and draw a reserve, wait a year, and check interest accrued.
   function test_accrueInterest_BorrowAndWait() public {
     uint256 amount = 1000e18;
-    uint256 wethReserveId = wethReserveId(spoke1);
+    uint256 wethReserveId = _wethReserveId(spoke1);
     uint256 startTime = vm.getBlockTimestamp();
+
+    // so that premium is 0
+    updateLiquidityPremium(spoke1, wethReserveId, 0);
 
     // Bob supplies and borrows through spoke 1
     Utils.spokeSupply(spoke1, wethReserveId, bob, amount * 2, bob);
+    setUsingAsCollateral(spoke1, bob, wethReserveId, true);
     Utils.spokeBorrow(spoke1, wethReserveId, bob, amount, bob);
 
     uint256 baseBorrowRate = hub.getBaseInterestRate(wethAssetId);
@@ -83,10 +87,14 @@ contract SpokeAccrueInterestTest is SpokeBase {
     borrowAmount = bound(borrowAmount, 1, MAX_SUPPLY_AMOUNT / 2);
     uint256 supplyAmount = borrowAmount * 2;
     uint256 startTime = vm.getBlockTimestamp();
-    uint256 wethReserveId = wethReserveId(spoke1);
+    uint256 wethReserveId = _wethReserveId(spoke1);
+
+    // so that premium is 0
+    updateLiquidityPremium(spoke1, wethReserveId, 0);
 
     // Bob supplies and borrows through spoke 1
     Utils.spokeSupply(spoke1, wethReserveId, bob, supplyAmount, bob);
+    setUsingAsCollateral(spoke1, bob, wethReserveId, true);
     Utils.spokeBorrow(spoke1, wethReserveId, bob, borrowAmount, bob);
 
     uint256 baseBorrowRate = hub.getBaseInterestRate(wethAssetId);

@@ -54,14 +54,14 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
 
   /// Without a collateral set, user risk premium is 0.
   function test_getUserRiskPremium_no_collateral_set() public {
-    Utils.spokeSupply(spoke1, daiReserveId(spoke1), bob, 100e18, bob);
+    Utils.spokeSupply(spoke1, _daiReserveId(spoke1), bob, 100e18, bob);
     // Bob doesn't set dai as collateral, despite supplying, so his user rp is 0
     assertEq(spoke1.getUserRiskPremium(bob), 0, 'user risk premium');
   }
 
   /// Without a draw, user risk premium is 0.
   function test_getUserRiskPremium_single_reserve_collateral() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     uint256 daiAmount = 100e18;
 
     // Bob supply dai into spoke1
@@ -73,7 +73,7 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
 
   /// When supplying and borrowing one reserve, user risk premium matches the liquidity premium of that reserve.
   function test_getUserRiskPremium_single_reserve_collateral_borrowed() public {
-    uint256 daiReserveId = daiReserveId(spoke1);
+    uint256 daiReserveId = _daiReserveId(spoke1);
     uint256 supplyAmount = 100e18;
     uint256 borrowAmount = 50e18;
 
@@ -96,7 +96,7 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     borrowAmount = bound(borrowAmount, 1, MAX_SUPPLY_AMOUNT / 2);
 
     ReserveInfoLocal memory daiInfo;
-    daiInfo.reserveId = daiReserveId(spoke1);
+    daiInfo.reserveId = _daiReserveId(spoke1);
     daiInfo.borrowAmount = borrowAmount;
     daiInfo.supplyAmount = borrowAmount * 2;
 
@@ -126,8 +126,8 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     daiInfo.borrowAmount = borrowAmount;
     daiInfo.supplyAmount = borrowAmount * 2;
 
-    daiInfo.reserveId = daiReserveId(spoke1);
-    usdxInfo.reserveId = usdxReserveId(spoke1);
+    daiInfo.reserveId = _daiReserveId(spoke1);
+    usdxInfo.reserveId = _usdxReserveId(spoke1);
 
     daiInfo.lp = spoke1.getLiquidityPremium(daiInfo.reserveId);
 
@@ -155,9 +155,9 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wethInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke1);
-    usdxInfo.reserveId = usdxReserveId(spoke1);
-    wethInfo.reserveId = wethReserveId(spoke1);
+    daiInfo.reserveId = _daiReserveId(spoke1);
+    usdxInfo.reserveId = _usdxReserveId(spoke1);
+    wethInfo.reserveId = _wethReserveId(spoke1);
 
     daiInfo.supplyAmount = 1000e18;
     usdxInfo.supplyAmount = 1000e6;
@@ -202,9 +202,9 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wethInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke1);
-    usdxInfo.reserveId = usdxReserveId(spoke1);
-    wethInfo.reserveId = wethReserveId(spoke1);
+    daiInfo.reserveId = _daiReserveId(spoke1);
+    usdxInfo.reserveId = _usdxReserveId(spoke1);
+    wethInfo.reserveId = _wethReserveId(spoke1);
 
     daiInfo.supplyAmount = 2000e18;
     usdxInfo.supplyAmount = 2000e6;
@@ -244,9 +244,9 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wethInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke1);
-    usdxInfo.reserveId = usdxReserveId(spoke1);
-    wethInfo.reserveId = wethReserveId(spoke1);
+    daiInfo.reserveId = _daiReserveId(spoke1);
+    usdxInfo.reserveId = _usdxReserveId(spoke1);
+    wethInfo.reserveId = _wethReserveId(spoke1);
 
     daiInfo.supplyAmount = 2000e18;
     usdxInfo.supplyAmount = 6000e6;
@@ -297,9 +297,9 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wethInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke3);
-    usdxInfo.reserveId = usdxReserveId(spoke3);
-    wethInfo.reserveId = wethReserveId(spoke3);
+    daiInfo.reserveId = _daiReserveId(spoke3);
+    usdxInfo.reserveId = _usdxReserveId(spoke3);
+    wethInfo.reserveId = _wethReserveId(spoke3);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     usdxInfo.supplyAmount = usdxSupplyAmount;
@@ -359,10 +359,10 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wbtcInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke3);
-    wethInfo.reserveId = wethReserveId(spoke3);
-    usdxInfo.reserveId = usdxReserveId(spoke3);
-    wbtcInfo.reserveId = wbtcReserveId(spoke3);
+    daiInfo.reserveId = _daiReserveId(spoke3);
+    wethInfo.reserveId = _wethReserveId(spoke3);
+    usdxInfo.reserveId = _usdxReserveId(spoke3);
+    wbtcInfo.reserveId = _wbtcReserveId(spoke3);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     wethInfo.supplyAmount = wethSupplyAmount;
@@ -433,11 +433,11 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory wbtcInfo;
     ReserveInfoLocal memory dai2Info;
 
-    daiInfo.reserveId = daiReserveId(spoke2);
-    usdxInfo.reserveId = usdxReserveId(spoke2);
-    wethInfo.reserveId = wethReserveId(spoke2);
-    wbtcInfo.reserveId = wbtcReserveId(spoke2);
-    dai2Info.reserveId = dai2ReserveId(spoke2);
+    daiInfo.reserveId = _daiReserveId(spoke2);
+    usdxInfo.reserveId = _usdxReserveId(spoke2);
+    wethInfo.reserveId = _wethReserveId(spoke2);
+    wbtcInfo.reserveId = _wbtcReserveId(spoke2);
+    dai2Info.reserveId = _dai2ReserveId(spoke2);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     wethInfo.supplyAmount = wethSupplyAmount;
@@ -509,10 +509,10 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
 
     newUsdxPrice = bound(newUsdxPrice, 0, 1e16);
 
-    daiSupplyAmount = bound(daiSupplyAmount, 0, MAX_SUPPLY_AMOUNT);
-    wethSupplyAmount = bound(wethSupplyAmount, 0, MAX_SUPPLY_AMOUNT);
-    usdxSupplyAmount = bound(usdxSupplyAmount, 0, MAX_SUPPLY_AMOUNT);
-    wbtcSupplyAmount = bound(wbtcSupplyAmount, 0, MAX_SUPPLY_AMOUNT);
+    daiSupplyAmount = bound(daiSupplyAmount, 0, MAX_SUPPLY_AMOUNT_DAI);
+    wethSupplyAmount = bound(wethSupplyAmount, 0, MAX_SUPPLY_AMOUNT_WETH);
+    usdxSupplyAmount = bound(usdxSupplyAmount, 0, MAX_SUPPLY_AMOUNT_USDX);
+    wbtcSupplyAmount = bound(wbtcSupplyAmount, 0, MAX_SUPPLY_AMOUNT_WBTC);
 
     borrowAmount = bound(borrowAmount, 0, totalBorrowAmount);
 
@@ -522,11 +522,11 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory wbtcInfo;
     ReserveInfoLocal memory dai2Info;
 
-    daiInfo.reserveId = daiReserveId(spoke2);
-    wethInfo.reserveId = wethReserveId(spoke2);
-    usdxInfo.reserveId = usdxReserveId(spoke2);
-    wbtcInfo.reserveId = wbtcReserveId(spoke2);
-    dai2Info.reserveId = dai2ReserveId(spoke2);
+    daiInfo.reserveId = _daiReserveId(spoke2);
+    wethInfo.reserveId = _wethReserveId(spoke2);
+    usdxInfo.reserveId = _usdxReserveId(spoke2);
+    wbtcInfo.reserveId = _wbtcReserveId(spoke2);
+    dai2Info.reserveId = _dai2ReserveId(spoke2);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     wethInfo.supplyAmount = wethSupplyAmount;
@@ -623,11 +623,11 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory wbtcInfo;
     ReserveInfoLocal memory dai2Info;
 
-    daiInfo.reserveId = daiReserveId(spoke2);
-    wethInfo.reserveId = wethReserveId(spoke2);
-    usdxInfo.reserveId = usdxReserveId(spoke2);
-    wbtcInfo.reserveId = wbtcReserveId(spoke2);
-    dai2Info.reserveId = dai2ReserveId(spoke2);
+    daiInfo.reserveId = _daiReserveId(spoke2);
+    wethInfo.reserveId = _wethReserveId(spoke2);
+    usdxInfo.reserveId = _usdxReserveId(spoke2);
+    wbtcInfo.reserveId = _wbtcReserveId(spoke2);
+    dai2Info.reserveId = _dai2ReserveId(spoke2);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     wethInfo.supplyAmount = wethSupplyAmount;
@@ -705,10 +705,10 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo,
     ReserveInfoLocal memory wbtcInfo
   ) public {
-    daiInfo.supplyAmount = bound(daiInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT);
-    wethInfo.supplyAmount = bound(wethInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT);
-    usdxInfo.supplyAmount = bound(usdxInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT);
-    wbtcInfo.supplyAmount = bound(wbtcInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT);
+    daiInfo.supplyAmount = bound(daiInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT_DAI);
+    wethInfo.supplyAmount = bound(wethInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT_WETH);
+    usdxInfo.supplyAmount = bound(usdxInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT_USDX);
+    wbtcInfo.supplyAmount = bound(wbtcInfo.supplyAmount, 0, MAX_SUPPLY_AMOUNT_WBTC);
 
     daiInfo.borrowAmount = bound(daiInfo.borrowAmount, 0, daiInfo.supplyAmount / 2);
     wethInfo.borrowAmount = bound(wethInfo.borrowAmount, 0, wethInfo.supplyAmount / 2);
@@ -742,26 +742,26 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
 
     // Bob supply dai into spoke2
     if (daiInfo.supplyAmount > 0) {
-      Utils.spokeSupply(spoke2, daiReserveId(spoke2), bob, daiInfo.supplyAmount, bob);
-      setUsingAsCollateral(spoke2, bob, daiReserveId(spoke2), true);
+      Utils.spokeSupply(spoke2, _daiReserveId(spoke2), bob, daiInfo.supplyAmount, bob);
+      setUsingAsCollateral(spoke2, bob, _daiReserveId(spoke2), true);
     }
 
     // Bob supply weth into spoke2
     if (wethInfo.supplyAmount > 0) {
-      Utils.spokeSupply(spoke2, wethReserveId(spoke2), bob, wethInfo.supplyAmount, bob);
-      setUsingAsCollateral(spoke2, bob, wethReserveId(spoke2), true);
+      Utils.spokeSupply(spoke2, _wethReserveId(spoke2), bob, wethInfo.supplyAmount, bob);
+      setUsingAsCollateral(spoke2, bob, _wethReserveId(spoke2), true);
     }
 
     // Bob supply usdx into spoke2
     if (usdxInfo.supplyAmount > 0) {
-      Utils.spokeSupply(spoke2, usdxReserveId(spoke2), bob, usdxInfo.supplyAmount, bob);
-      setUsingAsCollateral(spoke2, bob, usdxReserveId(spoke2), true);
+      Utils.spokeSupply(spoke2, _usdxReserveId(spoke2), bob, usdxInfo.supplyAmount, bob);
+      setUsingAsCollateral(spoke2, bob, _usdxReserveId(spoke2), true);
     }
 
     // Bob supply wbtc into spoke2
     if (wbtcInfo.supplyAmount > 0) {
-      Utils.spokeSupply(spoke2, wbtcReserveId(spoke2), bob, wbtcInfo.supplyAmount, bob);
-      setUsingAsCollateral(spoke2, bob, wbtcReserveId(spoke2), true);
+      Utils.spokeSupply(spoke2, _wbtcReserveId(spoke2), bob, wbtcInfo.supplyAmount, bob);
+      setUsingAsCollateral(spoke2, bob, _wbtcReserveId(spoke2), true);
     }
 
     // Update prices
@@ -771,10 +771,10 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     oracle.setAssetPrice(wbtcAssetId, wbtcInfo.price);
 
     // Update LPs
-    spoke2.updateLiquidityPremium(daiReserveId(spoke2), daiInfo.lp);
-    spoke2.updateLiquidityPremium(wethReserveId(spoke2), wethInfo.lp);
-    spoke2.updateLiquidityPremium(usdxReserveId(spoke2), usdxInfo.lp);
-    spoke2.updateLiquidityPremium(wbtcReserveId(spoke2), wbtcInfo.lp);
+    spoke2.updateLiquidityPremium(_daiReserveId(spoke2), daiInfo.lp);
+    spoke2.updateLiquidityPremium(_wethReserveId(spoke2), wethInfo.lp);
+    spoke2.updateLiquidityPremium(_usdxReserveId(spoke2), usdxInfo.lp);
+    spoke2.updateLiquidityPremium(_wbtcReserveId(spoke2), wbtcInfo.lp);
 
     // Check user risk premium
     assertEq(
@@ -804,10 +804,10 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wbtcInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke3);
-    wethInfo.reserveId = wethReserveId(spoke3);
-    usdxInfo.reserveId = usdxReserveId(spoke3);
-    wbtcInfo.reserveId = wbtcReserveId(spoke3);
+    daiInfo.reserveId = _daiReserveId(spoke3);
+    wethInfo.reserveId = _wethReserveId(spoke3);
+    usdxInfo.reserveId = _usdxReserveId(spoke3);
+    wbtcInfo.reserveId = _wbtcReserveId(spoke3);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     wethInfo.supplyAmount = wethSupplyAmount;
@@ -924,10 +924,10 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory usdxInfo;
     ReserveInfoLocal memory wbtcInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke3);
-    wethInfo.reserveId = wethReserveId(spoke3);
-    usdxInfo.reserveId = usdxReserveId(spoke3);
-    wbtcInfo.reserveId = wbtcReserveId(spoke3);
+    daiInfo.reserveId = _daiReserveId(spoke3);
+    wethInfo.reserveId = _wethReserveId(spoke3);
+    usdxInfo.reserveId = _usdxReserveId(spoke3);
+    wbtcInfo.reserveId = _wbtcReserveId(spoke3);
 
     daiInfo.supplyAmount = daiSupplyAmount;
     wethInfo.supplyAmount = wethSupplyAmount;
@@ -1131,8 +1131,8 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
   /// After 1 year, Alice does a repay, and we ensure the same values are updated accordingly at the end of year 2.
   function test_getUserRiskPremium_applyInterest_two_users_two_reserves_borrowed() public {
     // Set Dai lp to 10% and usdx to 20%
-    spoke1.updateLiquidityPremium(daiReserveId(spoke1), 10_00);
-    spoke1.updateLiquidityPremium(usdxReserveId(spoke1), 20_00);
+    spoke1.updateLiquidityPremium(_daiReserveId(spoke1), 10_00);
+    spoke1.updateLiquidityPremium(_usdxReserveId(spoke1), 20_00);
 
     UserInfoLocal memory bobDaiInfo;
     UserInfoLocal memory aliceDaiInfo;
@@ -1152,8 +1152,8 @@ contract SpokeUserRiskPremiumTest is SpokeBase {
     ReserveInfoLocal memory daiInfo;
     ReserveInfoLocal memory usdxInfo;
 
-    daiInfo.reserveId = daiReserveId(spoke1);
-    usdxInfo.reserveId = usdxReserveId(spoke1);
+    daiInfo.reserveId = _daiReserveId(spoke1);
+    usdxInfo.reserveId = _usdxReserveId(spoke1);
 
     daiInfo.lp = spoke1.getLiquidityPremium(daiInfo.reserveId);
     usdxInfo.lp = spoke1.getLiquidityPremium(usdxInfo.reserveId);

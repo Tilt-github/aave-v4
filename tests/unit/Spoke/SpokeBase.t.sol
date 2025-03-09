@@ -6,6 +6,7 @@ import {KeyValueListInMemory} from 'src/contracts/KeyValueListInMemory.sol';
 
 contract SpokeBase is Base {
   using PercentageMath for uint256;
+  using WadRayMath for uint256;
   using KeyValueListInMemory for KeyValueListInMemory.List;
 
   struct TestData {
@@ -64,7 +65,7 @@ contract SpokeBase is Base {
     SupplyBorrowLocal memory state;
 
     TestReserve memory collateral;
-    collateral.reserveId = wethReserveId(spoke);
+    collateral.reserveId = _wethReserveId(spoke);
     collateral.supplyAmount = 1_000e18;
     collateral.supplier = alice;
 
@@ -243,10 +244,37 @@ contract SpokeBase is Base {
     uint256 debtAssetUnits = 10 ** hub.getAsset(debtData.assetId).config.decimals;
     uint256 debtPrice = oracle.getAssetPrice(debtData.assetId);
 
+    uint256 normalizedDebtAmount = (debtAmount * debtPrice).wadify() / debtAssetUnits;
+    uint256 normalizedCollPrice = collPrice.wadify() / collAssetUnits;
+
     return
-      ((debtAmount * debtPrice * collAssetUnits) / (collPrice * debtAssetUnits)).percentDiv(
-        collData.config.collateralFactor
-      ) + 1;
+      (normalizedDebtAmount.wadify() /
+        normalizedCollPrice.wadify().percentMul(collData.config.collateralFactor)) + 1;
+  }
+
+  function _calcMaxDebtAmount(
+    ISpoke spoke,
+    uint256 collReserveId,
+    uint256 debtReserveId,
+    uint256 collAmount
+  ) internal view returns (uint256) {
+    DataTypes.Reserve memory collData = spoke.getReserve(collReserveId);
+    uint256 collPrice = oracle.getAssetPrice(collData.assetId);
+    uint256 collAssetUnits = 10 ** hub.getAsset(collData.assetId).config.decimals;
+
+    DataTypes.Reserve memory debtData = spoke.getReserve(debtReserveId);
+    uint256 debtAssetUnits = 10 ** hub.getAsset(debtData.assetId).config.decimals;
+    uint256 debtPrice = oracle.getAssetPrice(debtData.assetId);
+
+    uint256 normalizedDebtAmount = (debtPrice).wadify() / debtAssetUnits;
+    uint256 normalizedCollPrice = (collAmount * collPrice).wadify() / collAssetUnits;
+
+    uint256 maxDebt = (
+      (normalizedCollPrice.wadify().percentMul(collData.config.collateralFactor) /
+        normalizedDebtAmount.wadify())
+    );
+
+    return maxDebt > 1 ? maxDebt - 1 : maxDebt;
   }
 
   /// @dev Returns the USD value of the reserve normalized by it's decimals, in terms of WAD
