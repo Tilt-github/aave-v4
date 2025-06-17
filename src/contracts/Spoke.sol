@@ -168,7 +168,8 @@ contract Spoke is ISpoke, Multicall {
       assetId,
       -int256(userPremiumDrawnShares),
       -int256(userPremiumOffset),
-      int256(accruedPremium)
+      accruedPremium,
+      0
     ); // unnecessary but we realize premium debt here
     uint256 withdrawnShares = HUB.remove(assetId, amount, to);
 
@@ -192,6 +193,7 @@ contract Spoke is ISpoke, Multicall {
       assetId,
       int256(userPremiumDrawnShares),
       int256(userPremiumOffset),
+      0,
       0
     );
     _notifyRiskPremiumUpdate(assetId, msg.sender, newUserRiskPremium);
@@ -223,7 +225,8 @@ contract Spoke is ISpoke, Multicall {
       assetId,
       -int256(userPremiumDrawnShares),
       -int256(userPremiumOffset),
-      int256(accruedPremium)
+      accruedPremium,
+      0
     ); // unnecessary but we realize premium debt here
     uint256 baseDrawnShares = HUB.draw(assetId, amount, to);
 
@@ -247,6 +250,7 @@ contract Spoke is ISpoke, Multicall {
       assetId,
       int256(userPremiumDrawnShares),
       int256(userPremiumOffset),
+      0,
       0
     );
     _notifyRiskPremiumUpdate(assetId, msg.sender, newUserRiskPremium);
@@ -272,18 +276,20 @@ contract Spoke is ISpoke, Multicall {
     uint256 userPremiumDrawnShares = userPosition.premiumDrawnShares;
     uint256 userPremiumOffset = userPosition.premiumOffset;
     uint256 userRealizedPremium = userPosition.realizedPremium;
+    uint256 accruedPremium = premiumDebt - userPosition.realizedPremium;
 
     userPosition.premiumDrawnShares = 0;
     userPosition.premiumOffset = 0;
     userPosition.realizedPremium = premiumDebt - premiumDebtRestored;
 
-    _settlePremiumDebt(
+    _refreshPremiumDebt(
       reserve,
       msg.sender,
       assetId,
       -int256(userPremiumDrawnShares),
       -int256(userPremiumOffset),
-      _signedDiff(premiumDebt - premiumDebtRestored, userRealizedPremium)
+      accruedPremium,
+      premiumDebtRestored
     ); // we settle premium debt here
     uint256 restoredShares = HUB.restore(
       assetId,
@@ -311,6 +317,7 @@ contract Spoke is ISpoke, Multicall {
       assetId,
       int256(userPremiumDrawnShares),
       int256(userPremiumOffset),
+      0,
       0
     );
     _notifyRiskPremiumUpdate(assetId, msg.sender, newUserRiskPremium);
@@ -620,43 +627,23 @@ contract Spoke is ISpoke, Multicall {
     uint256 assetId,
     int256 premiumDrawnSharesDelta,
     int256 premiumOffsetDelta,
-    int256 realizedPremiumDelta
+    uint256 realizedPremiumAdded,
+    uint256 realizedPremiumTaken
   ) internal {
     _refresh(
       reserve,
       userAddress,
       premiumDrawnSharesDelta,
       premiumOffsetDelta,
-      realizedPremiumDelta
+      realizedPremiumAdded,
+      realizedPremiumTaken
     );
     HUB.refreshPremiumDebt(
       assetId,
       premiumDrawnSharesDelta,
       premiumOffsetDelta,
-      realizedPremiumDelta
-    );
-  }
-
-  function _settlePremiumDebt(
-    DataTypes.Reserve storage reserve,
-    address userAddress,
-    uint256 assetId,
-    int256 premiumDrawnSharesDelta,
-    int256 premiumOffsetDelta,
-    int256 realizedPremiumDelta
-  ) internal {
-    _refresh(
-      reserve,
-      userAddress,
-      premiumDrawnSharesDelta,
-      premiumOffsetDelta,
-      realizedPremiumDelta
-    );
-    HUB.settlePremiumDebt(
-      assetId,
-      premiumDrawnSharesDelta,
-      premiumOffsetDelta,
-      realizedPremiumDelta
+      realizedPremiumAdded,
+      realizedPremiumTaken
     );
   }
 
@@ -665,18 +652,20 @@ contract Spoke is ISpoke, Multicall {
     address userAddress,
     int256 premiumDrawnSharesDelta,
     int256 premiumOffsetDelta,
-    int256 realizedPremiumDelta
+    uint256 realizedPremiumAdded,
+    uint256 realizedPremiumTaken
   ) internal {
     reserve.premiumDrawnShares = _add(reserve.premiumDrawnShares, premiumDrawnSharesDelta);
     reserve.premiumOffset = _add(reserve.premiumOffset, premiumOffsetDelta);
-    reserve.realizedPremium = _add(reserve.realizedPremium, realizedPremiumDelta);
+    reserve.realizedPremium = reserve.realizedPremium + realizedPremiumAdded - realizedPremiumTaken;
 
     emit RefreshPremiumDebt(
       reserve.reserveId,
       userAddress,
       premiumDrawnSharesDelta,
       premiumOffsetDelta,
-      realizedPremiumDelta
+      realizedPremiumAdded,
+      realizedPremiumTaken
     );
   }
 
@@ -918,7 +907,8 @@ contract Spoke is ISpoke, Multicall {
           assetId,
           premiumDrawnSharesDelta,
           _signedDiff(userPosition.premiumOffset, oldUserPremiumOffset),
-          int256(accruedUserPremium)
+          accruedUserPremium,
+          0
         );
       }
       unchecked {
@@ -978,18 +968,23 @@ contract Spoke is ISpoke, Multicall {
       vars.userPremiumOffset = userDebtPosition.premiumOffset;
       vars.userRealizedPremium = userDebtPosition.realizedPremium;
 
-      userDebtPosition.premiumDrawnShares = 0;
-      userDebtPosition.premiumOffset = 0;
-      userDebtPosition.realizedPremium = vars.premiumDebt - vars.premiumDebtToLiquidate;
+      {
+        uint256 accruedPremium = vars.premiumDebt - vars.userRealizedPremium;
 
-      _settlePremiumDebt(
-        debtReserve,
-        users[vars.i],
-        vars.debtAssetId,
-        -int256(vars.userPremiumDrawnShares),
-        -int256(vars.userPremiumOffset),
-        _signedDiff(userDebtPosition.realizedPremium, vars.userRealizedPremium)
-      ); // settle premium debt
+        userDebtPosition.premiumDrawnShares = 0;
+        userDebtPosition.premiumOffset = 0;
+        userDebtPosition.realizedPremium = vars.premiumDebt - vars.premiumDebtToLiquidate;
+
+        _refreshPremiumDebt(
+          debtReserve,
+          users[vars.i],
+          vars.debtAssetId,
+          -int256(vars.userPremiumDrawnShares),
+          -int256(vars.userPremiumOffset),
+          accruedPremium,
+          vars.premiumDebtToLiquidate
+        ); // settle premium debt
+      }
 
       // todo: rm later to opt
       // optional: settle collateral reserve's premium debt
@@ -1009,7 +1004,8 @@ contract Spoke is ISpoke, Multicall {
         vars.collateralAssetId,
         -int256(vars.userPremiumDrawnShares),
         -int256(vars.userPremiumOffset),
-        int256(vars.userRealizedPremium)
+        vars.userRealizedPremium,
+        0
       ); // unnecessary but settle premium debt here for consistency
 
       // repay debt
@@ -1061,6 +1057,7 @@ contract Spoke is ISpoke, Multicall {
         users[vars.i],
         int256(vars.userPremiumDrawnShares),
         int256(vars.userPremiumOffset),
+        0,
         0
       );
 
@@ -1081,6 +1078,7 @@ contract Spoke is ISpoke, Multicall {
         users[vars.i],
         int256(vars.userPremiumDrawnShares),
         int256(vars.userPremiumOffset),
+        0,
         0
       );
 
@@ -1103,12 +1101,14 @@ contract Spoke is ISpoke, Multicall {
       vars.debtAssetId,
       vars.totalUserDebtPremiumDrawnSharesDelta,
       vars.totalUserDebtPremiumOffsetDelta,
+      0,
       0
     );
     HUB.refreshPremiumDebt(
       vars.collateralAssetId,
       vars.totalUserCollateralPremiumDrawnSharesDelta,
       vars.totalUserCollateralPremiumOffsetDelta,
+      0,
       0
     );
     vars.totalLiquidationProtocolFeeShares = HUB.convertToSuppliedShares(
