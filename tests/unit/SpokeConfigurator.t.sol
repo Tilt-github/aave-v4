@@ -73,7 +73,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateLiquidationCloseFactor() public {
-    uint256 newCloseFactor = ISpoke(spoke).HEALTH_FACTOR_LIQUIDATION_THRESHOLD() * 2;
+    uint128 newCloseFactor = Constants.HEALTH_FACTOR_LIQUIDATION_THRESHOLD * 2;
 
     DataTypes.LiquidationConfig memory expectedLiquidationConfig = spoke.getLiquidationConfig();
     expectedLiquidationConfig.closeFactor = newCloseFactor;
@@ -97,7 +97,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateHealthFactorForMaxBonus() public {
-    uint256 newHealthFactorForMaxBonus = spoke.HEALTH_FACTOR_LIQUIDATION_THRESHOLD() / 2;
+    uint64 newHealthFactorForMaxBonus = Constants.HEALTH_FACTOR_LIQUIDATION_THRESHOLD / 2;
 
     DataTypes.LiquidationConfig memory expectedLiquidationConfig = spoke.getLiquidationConfig();
     expectedLiquidationConfig.healthFactorForMaxBonus = newHealthFactorForMaxBonus;
@@ -121,7 +121,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateLiquidationBonusFactor() public {
-    uint256 newLiquidationBonusFactor = PercentageMath.PERCENTAGE_FACTOR / 2;
+    uint16 newLiquidationBonusFactor = (PercentageMath.PERCENTAGE_FACTOR / 2).toUint16();
 
     DataTypes.LiquidationConfig memory expectedLiquidationConfig = spoke.getLiquidationConfig();
     expectedLiquidationConfig.liquidationBonusFactor = newLiquidationBonusFactor;
@@ -284,7 +284,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateCollateralRisk() public {
-    uint256 newCollateralRisk = spoke.MAX_COLLATERAL_RISK() / 2;
+    uint24 newCollateralRisk = Constants.MAX_COLLATERAL_RISK / 2;
 
     DataTypes.ReserveConfig memory expectedReserveConfig = spoke.getReserveConfig(reserveId);
     expectedReserveConfig.collateralRisk = newCollateralRisk;
@@ -308,7 +308,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateCollateralFactor() public {
-    uint16 newCollateralFactor = uint16(PercentageMath.PERCENTAGE_FACTOR / 2);
+    uint16 newCollateralFactor = (PercentageMath.PERCENTAGE_FACTOR / 2).toUint16();
 
     DataTypes.DynamicReserveConfig memory expectedDynamicReserveConfig = spoke
       .getDynamicReserveConfig(reserveId);
@@ -336,7 +336,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateLiquidationBonus() public {
-    uint256 newLiquidationBonus = PercentageMath.PERCENTAGE_FACTOR + 1;
+    uint32 newLiquidationBonus = (PercentageMath.PERCENTAGE_FACTOR + 1).toUint32();
 
     DataTypes.DynamicReserveConfig memory expectedDynamicReserveConfig = spoke
       .getDynamicReserveConfig(reserveId);
@@ -363,7 +363,7 @@ contract SpokeConfiguratorTest is SpokeBase {
   }
 
   function test_updateLiquidationFee() public {
-    uint256 newLiquidationFee = PercentageMath.PERCENTAGE_FACTOR / 2;
+    uint16 newLiquidationFee = (PercentageMath.PERCENTAGE_FACTOR / 2).toUint16();
 
     DataTypes.DynamicReserveConfig memory expectedDynamicReserveConfig = spoke
       .getDynamicReserveConfig(reserveId);
