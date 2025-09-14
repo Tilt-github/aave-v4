@@ -2,20 +2,17 @@
 // Copyright (c) 2025 Aave Labs
 pragma solidity ^0.8.0;
 
-import {Rescuable} from 'src/misc/Rescuable.sol';
-import {Multicall} from 'src/misc/Multicall.sol';
-
 import {Ownable2Step, Ownable} from 'src/dependencies/openzeppelin/Ownable2Step.sol';
 import {SignatureChecker} from 'src/dependencies/openzeppelin/SignatureChecker.sol';
 import {IERC20Permit} from 'src/dependencies/openzeppelin/IERC20Permit.sol';
 import {SafeERC20} from 'src/dependencies/openzeppelin/SafeERC20.sol';
 import {IERC20} from 'src/dependencies/openzeppelin/IERC20.sol';
 import {EIP712} from 'src/dependencies/solady/EIP712.sol';
-
 import {MathUtils} from 'src/libraries/math/MathUtils.sol';
-
-import {ISignatureGateway} from 'src/interfaces/ISignatureGateway.sol';
-import {ISpoke} from 'src/interfaces/ISpoke.sol';
+import {Rescuable} from 'src/utils/Rescuable.sol';
+import {Multicall} from 'src/utils/Multicall.sol';
+import {ISpoke} from 'src/spoke/interfaces/ISpoke.sol';
+import {ISignatureGateway} from 'src/position-manager/interfaces/ISignatureGateway.sol';
 
 /**
  * @title SignatureGateway

@@ -7,15 +7,13 @@ import {SafeERC20} from 'src/dependencies/openzeppelin/SafeERC20.sol';
 import {IERC20} from 'src/dependencies/openzeppelin/IERC20.sol';
 import {AccessManaged} from 'src/dependencies/openzeppelin/AccessManaged.sol';
 import {SafeCast} from 'src/dependencies/openzeppelin/SafeCast.sol';
-
-import {AssetLogic} from 'src/libraries/logic/AssetLogic.sol';
-import {WadRayMath} from 'src/libraries/math/WadRayMath.sol';
-import {SharesMath} from 'src/libraries/math/SharesMath.sol';
-import {PercentageMath} from 'src/libraries/math/PercentageMath.sol';
 import {MathUtils} from 'src/libraries/math/MathUtils.sol';
-
-import {IHubBase, IHub} from 'src/interfaces/IHub.sol';
-import {IBasicInterestRateStrategy} from 'src/interfaces/IBasicInterestRateStrategy.sol';
+import {PercentageMath} from 'src/libraries/math/PercentageMath.sol';
+import {WadRayMath} from 'src/libraries/math/WadRayMath.sol';
+import {AssetLogic} from 'src/hub/libraries/AssetLogic.sol';
+import {SharesMath} from 'src/hub/libraries/SharesMath.sol';
+import {IBasicInterestRateStrategy} from 'src/hub/interfaces/IBasicInterestRateStrategy.sol';
+import {IHubBase, IHub} from 'src/hub/interfaces/IHub.sol';
 
 contract Hub is IHub, AccessManaged {
   using EnumerableSet for EnumerableSet.AddressSet;

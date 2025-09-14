@@ -9,44 +9,10 @@ import {StdStorage, stdStorage} from 'forge-std/StdStorage.sol';
 import {Vm, VmSafe} from 'forge-std/Vm.sol';
 import {console2 as console} from 'forge-std/console2.sol';
 
-import {IPriceOracle} from 'src/interfaces/IPriceOracle.sol';
+// dependencies
 import {AggregatorV3Interface} from 'src/dependencies/chainlink/AggregatorV3Interface.sol';
 import {TransparentUpgradeableProxy, ITransparentUpgradeableProxy} from 'src/dependencies/openzeppelin/TransparentUpgradeableProxy.sol';
 import {IERC20Metadata} from 'src/dependencies/openzeppelin/IERC20Metadata.sol';
-import {Hub, IHub} from 'src/contracts/Hub.sol';
-import {IHubBase} from 'src/interfaces/IHubBase.sol';
-import {Spoke, ISpoke} from 'src/contracts/Spoke.sol';
-import {ISpokeBase} from 'src/interfaces/ISpokeBase.sol';
-import {AaveOracle, IAaveOracle} from 'src/contracts/AaveOracle.sol';
-import {TreasurySpoke, ITreasurySpoke} from 'src/contracts/TreasurySpoke.sol';
-import {HubConfigurator, IHubConfigurator} from 'src/contracts/HubConfigurator.sol';
-import {SpokeConfigurator, ISpokeConfigurator} from 'src/contracts/SpokeConfigurator.sol';
-import {SpokeInstance} from 'src/instances/SpokeInstance.sol';
-import {PercentageMath} from 'src/libraries/math/PercentageMath.sol';
-import {WadRayMath} from 'src/libraries/math/WadRayMath.sol';
-import {SharesMath} from 'src/libraries/math/SharesMath.sol';
-import {MathUtils} from 'src/libraries/math/MathUtils.sol';
-import {Constants} from 'tests/Constants.sol';
-import {PositionStatusMap} from 'src/libraries/configuration/PositionStatusMap.sol';
-import {AssetInterestRateStrategy, IAssetInterestRateStrategy, IBasicInterestRateStrategy} from 'src/contracts/AssetInterestRateStrategy.sol';
-import {PositionStatusMap} from 'src/libraries/configuration/PositionStatusMap.sol';
-import {LiquidationLogic} from 'src/libraries/logic/LiquidationLogic.sol';
-import {Roles} from 'src/libraries/types/Roles.sol';
-import {Utils} from 'tests/Utils.sol';
-import {EIP712Types} from 'src/libraries/types/EIP712Types.sol';
-import {NativeTokenGateway, INativeTokenGateway} from 'src/misc/NativeTokenGateway.sol';
-import {Rescuable, IRescuable} from 'src/misc/Rescuable.sol';
-
-// mocks
-import {TestnetERC20} from 'tests/mocks/TestnetERC20.sol';
-import {MockERC20} from 'tests/mocks/MockERC20.sol';
-import {MockPriceFeed} from 'tests/mocks/MockPriceFeed.sol';
-import {PositionStatusMapWrapper} from 'tests/mocks/PositionStatusMapWrapper.sol';
-import {RescuableWrapper} from 'tests/mocks/RescuableWrapper.sol';
-import {MockSpoke} from 'tests/mocks/MockSpoke.sol';
-import {MockERC1271Wallet} from 'tests/mocks/MockERC1271Wallet.sol';
-
-// dependencies
 import {SafeCast} from 'src/dependencies/openzeppelin/SafeCast.sol';
 import {IERC20Errors} from 'src/dependencies/openzeppelin/IERC20Errors.sol';
 import {IERC20} from 'src/dependencies/openzeppelin/IERC20.sol';
@@ -59,6 +25,54 @@ import {Ownable2Step, Ownable} from 'src/dependencies/openzeppelin/Ownable2Step.
 import {Math} from 'src/dependencies/openzeppelin/Math.sol';
 import {WETH9} from 'src/dependencies/weth/WETH9.sol';
 import {LibBit} from 'src/dependencies/solady/LibBit.sol';
+
+import {Initializable} from 'src/dependencies/openzeppelin-upgradeable/Initializable.sol';
+import {IERC1967} from 'src/dependencies/openzeppelin/IERC1967.sol';
+
+// shared
+import {WadRayMath} from 'src/libraries/math/WadRayMath.sol';
+import {MathUtils} from 'src/libraries/math/MathUtils.sol';
+import {PercentageMath} from 'src/libraries/math/PercentageMath.sol';
+import {EIP712Types} from 'src/libraries/types/EIP712Types.sol';
+import {Roles} from 'src/libraries/types/Roles.sol';
+import {Rescuable, IRescuable} from 'src/utils/Rescuable.sol';
+import {UnitPriceFeed} from 'src/misc/UnitPriceFeed.sol';
+
+// hub
+import {HubConfigurator, IHubConfigurator} from 'src/hub/HubConfigurator.sol';
+import {Hub, IHub, IHubBase} from 'src/hub/Hub.sol';
+import {SharesMath} from 'src/hub/libraries/SharesMath.sol';
+import {AssetInterestRateStrategy, IAssetInterestRateStrategy, IBasicInterestRateStrategy} from 'src/hub/AssetInterestRateStrategy.sol';
+
+// spoke
+import {Spoke, ISpoke, ISpokeBase} from 'src/spoke/Spoke.sol';
+import {TreasurySpoke, ITreasurySpoke} from 'src/spoke/TreasurySpoke.sol';
+import {IPriceOracle} from 'src/spoke/interfaces/IPriceOracle.sol';
+import {AaveOracle} from 'src/spoke/AaveOracle.sol';
+import {IAaveOracle} from 'src/spoke/interfaces/IAaveOracle.sol';
+import {SpokeConfigurator, ISpokeConfigurator} from 'src/spoke/SpokeConfigurator.sol';
+import {SpokeInstance} from 'src/spoke/instances/SpokeInstance.sol';
+import {PositionStatusMap} from 'src/spoke/libraries/PositionStatusMap.sol';
+import {LiquidationLogic} from 'src/spoke/libraries/LiquidationLogic.sol';
+import {KeyValueList} from 'src/spoke/libraries/KeyValueList.sol';
+
+// position manager
+import {NativeTokenGateway, INativeTokenGateway} from 'src/position-manager/NativeTokenGateway.sol';
+import {SignatureGateway, ISignatureGateway} from 'src/position-manager/SignatureGateway.sol';
+
+// test
+import {Constants} from 'tests/Constants.sol';
+import {Utils} from 'tests/Utils.sol';
+
+// mocks
+import {TestnetERC20} from 'tests/mocks/TestnetERC20.sol';
+import {MockERC20} from 'tests/mocks/MockERC20.sol';
+import {MockPriceFeed} from 'tests/mocks/MockPriceFeed.sol';
+import {PositionStatusMapWrapper} from 'tests/mocks/PositionStatusMapWrapper.sol';
+import {RescuableWrapper} from 'tests/mocks/RescuableWrapper.sol';
+import {MockSpoke} from 'tests/mocks/MockSpoke.sol';
+import {MockERC1271Wallet} from 'tests/mocks/MockERC1271Wallet.sol';
+import {MockSpokeInstance} from 'tests/mocks/MockSpokeInstance.sol';
 
 abstract contract Base is Test {
   using WadRayMath for uint256;

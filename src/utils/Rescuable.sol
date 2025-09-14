@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {SafeERC20} from 'src/dependencies/openzeppelin/SafeERC20.sol';
 import {Address} from 'src/dependencies/openzeppelin/Address.sol';
 import {IERC20} from 'src/dependencies/openzeppelin/IERC20.sol';
-
 import {IRescuable} from 'src/interfaces/IRescuable.sol';
 
 abstract contract Rescuable is IRescuable {

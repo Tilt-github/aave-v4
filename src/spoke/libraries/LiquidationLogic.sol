@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {SafeCast} from 'src/dependencies/openzeppelin/SafeCast.sol';
-import {PositionStatusMap} from 'src/libraries/configuration/PositionStatusMap.sol';
+import {MathUtils} from 'src/libraries/math/MathUtils.sol';
 import {PercentageMath} from 'src/libraries/math/PercentageMath.sol';
 import {WadRayMath} from 'src/libraries/math/WadRayMath.sol';
-import {MathUtils} from 'src/libraries/math/MathUtils.sol';
-import {IAaveOracle} from 'src/interfaces/IAaveOracle.sol';
-import {IHubBase} from 'src/interfaces/IHubBase.sol';
-import {ISpoke, ISpokeBase} from 'src/interfaces/ISpoke.sol';
+import {PositionStatusMap} from 'src/spoke/libraries/PositionStatusMap.sol';
+import {IHubBase} from 'src/hub/interfaces/IHubBase.sol';
+import {IAaveOracle} from 'src/spoke/interfaces/IAaveOracle.sol';
+import {ISpoke, ISpokeBase} from 'src/spoke/interfaces/ISpoke.sol';
 
 library LiquidationLogic {
   using SafeCast for *;

@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import {SafeCast} from 'src/dependencies/openzeppelin/SafeCast.sol';
 import {Ownable2Step, Ownable} from 'src/dependencies/openzeppelin/Ownable2Step.sol';
-import {ISpoke} from 'src/interfaces/ISpoke.sol';
-import {ISpokeConfigurator} from 'src/interfaces/ISpokeConfigurator.sol';
+import {ISpoke} from 'src/spoke/interfaces/ISpoke.sol';
+import {ISpokeConfigurator} from 'src/spoke/interfaces/ISpokeConfigurator.sol';
 
 /**
  * @title SpokeConfigurator

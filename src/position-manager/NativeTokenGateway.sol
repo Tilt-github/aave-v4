@@ -2,18 +2,15 @@
 // Copyright (c) 2025 Aave Labs
 pragma solidity ^0.8.0;
 
-import {Rescuable} from 'src/misc/Rescuable.sol';
-
 import {ReentrancyGuardTransient} from 'src/dependencies/openzeppelin/ReentrancyGuardTransient.sol';
 import {Ownable2Step, Ownable} from 'src/dependencies/openzeppelin/Ownable2Step.sol';
 import {SafeERC20} from 'src/dependencies/openzeppelin/SafeERC20.sol';
 import {Address} from 'src/dependencies/openzeppelin/Address.sol';
-
 import {MathUtils} from 'src/libraries/math/MathUtils.sol';
-
-import {INativeTokenGateway} from 'src/interfaces/INativeTokenGateway.sol';
-import {INativeWrapper} from 'src/interfaces/INativeWrapper.sol';
-import {ISpoke} from 'src/interfaces/ISpoke.sol';
+import {Rescuable} from 'src/utils/Rescuable.sol';
+import {ISpoke} from 'src/spoke/interfaces/ISpoke.sol';
+import {INativeWrapper} from 'src/position-manager/interfaces/INativeWrapper.sol';
+import {INativeTokenGateway} from 'src/position-manager/interfaces/INativeTokenGateway.sol';
 
 /**
  * @title NativeTokenGateway
