@@ -122,6 +122,7 @@ abstract contract Spoke is ISpoke, Multicall, NoncesKeyed, AccessManagedUpgradea
   }
 
   /// @inheritdoc ISpoke
+  /* checking continue */
   function addReserve(
     address hub,
     uint256 assetId,
@@ -131,7 +132,7 @@ abstract contract Spoke is ISpoke, Multicall, NoncesKeyed, AccessManagedUpgradea
   ) external restricted returns (uint256) {
     require(hub != address(0), InvalidAddress());
     require(assetId <= MAX_ALLOWED_ASSET_ID, InvalidAssetId());
-    require(!_reserveExists[hub][assetId], ReserveExists());
+    require(!_reserveExists[hub][assetId], ReserveExists());//checking
 
     _validateReserveConfig(config);
     _validateDynamicReserveConfig(dynamicConfig);
@@ -227,13 +228,14 @@ abstract contract Spoke is ISpoke, Multicall, NoncesKeyed, AccessManagedUpgradea
   }
 
   /// @inheritdoc ISpokeBase
+  /* checking */
   function supply(
     uint256 reserveId,
     uint256 amount,
     address onBehalfOf
   ) external onlyPositionManager(onBehalfOf) returns (uint256, uint256) {
-    Reserve storage reserve = _getReserve(reserveId);
-    UserPosition storage userPosition = _userPositions[onBehalfOf][reserveId];
+    Reserve storage reserve = _getReserve(reserveId);//ok
+    UserPosition storage userPosition = _userPositions[onBehalfOf][reserveId];//ok
     _validateSupply(reserve.flags);
 
     reserve.underlying.safeTransferFrom(msg.sender, address(reserve.hub), amount);
@@ -886,8 +888,9 @@ abstract contract Spoke is ISpoke, Multicall, NoncesKeyed, AccessManagedUpgradea
     }
   }
 
+/* ok */
   function _getReserve(uint256 reserveId) internal view returns (Reserve storage) {
-    Reserve storage reserve = _reserves[reserveId];
+    Reserve storage reserve = _reserves[reserveId]; //ok _reserves gets populated in addReserve(). Check that first?
     require(address(reserve.hub) != address(0), ReserveNotListed());
     return reserve;
   }

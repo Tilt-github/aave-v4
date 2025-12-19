@@ -21,12 +21,13 @@ contract SpokeInstance is Spoke {
   /// @notice Initializer.
   /// @dev The authority contract must implement the `AccessManaged` interface for access control.
   /// @param authority The address of the authority contract which manages permissions.
+  /* ok */
   function initialize(address authority) external override reinitializer(SPOKE_REVISION) {
     emit UpdateOracle(ORACLE);
     require(authority != address(0), InvalidAddress());
-    __AccessManaged_init(authority);
+    __AccessManaged_init(authority);//ok authority in initialization
     if (_liquidationConfig.targetHealthFactor == 0) {
-      _liquidationConfig.targetHealthFactor = HEALTH_FACTOR_LIQUIDATION_THRESHOLD;
+      _liquidationConfig.targetHealthFactor = HEALTH_FACTOR_LIQUIDATION_THRESHOLD; //1e18
       emit UpdateLiquidationConfig(_liquidationConfig);
     }
   }
